@@ -28,6 +28,11 @@ public class ObjectSocket <OutputT extends Serializable, InputT extends Serializ
 		}
 	}
 	
+	public ObjectSocket(NetLocation location) throws IOException
+	{
+		this(new Socket(location.getAddress(), location.getPort()));
+	}
+	
 	public void sendObject(InputT toSend) throws IOException {
 		outStream.writeObject(toSend);
 	}
@@ -43,7 +48,7 @@ public class ObjectSocket <OutputT extends Serializable, InputT extends Serializ
 		}
 	}
 
-	public void close() throws Exception
+	public void close() throws IOException
 	{
 		try {
 			outStream.close();

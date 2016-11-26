@@ -1,11 +1,10 @@
 package os.union;
 
 import java.io.Serializable;
-import java.util.function.Consumer;
 
-public interface PauseableProgram<OutputT extends Serializable, InputT>
+public interface PauseableProgram<OutputT extends Serializable, InputT extends Serializable>
 {
-	public SerialIterable<OutputT> getProgram();
+	public Program<OutputT, InputT> getProgram();
 	public void handleResult(OutputT stdout);
-	public void initProgram(Consumer<InputT> stdin);
+	public void initProgram(RemoteInput<InputT> stdin);
 }

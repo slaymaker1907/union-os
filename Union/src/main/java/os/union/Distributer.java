@@ -1,30 +1,43 @@
 package os.union;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.net.Socket;
+import java.util.Random;
 
 public class Distributer implements AutoCloseable
 {
-	private ObjectSocket<Serializable, Serializable> toBrain;
+	private NetLocation brainLoc;
+	private Random gen = new Random();
 	
-	public Distributer(Socket toBrain) throws IOException
+	public Distributer(NetLocation brainLoc) throws IOException
 	{
-		this.toBrain = new ObjectSocket<>( toBrain);
+		this.brainLoc = brainLoc;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public <OutputT extends Serializable, InputT> void invokeMethod(PauseableProgram<OutputT, InputT> program) throws IOException
+	public <OutputT extends Serializable, InputT extends Serializable> void invokeMethod(PauseableProgram<OutputT, InputT> program) throws IOException
 	{
-		SerialIterable<OutputT> toSend = program.getProgram();
-		this.toBrain.sendObject(toSend);
-		while(true) {
-			program.handleResult((OutputT) this.toBrain.receiveObject());
+		ProgramPacket<OutputT, InputT> toSend = new ProgramPacket<>(gen.nextLong(), program.getProgram());
+		NetLocation workerLoc = null;
+		try(ObjectSocket<NetLocation, Serializable> toBrain = new ObjectSocket<>(this.brainLoc))
+		{
+			workerLoc = toBrain.receiveObject();
+		}
+		try(ObjectSocket<OutputT, Serializable> worker = new ObjectSocket<>(workerLoc))
+		{
+			worker.sendObject(toSend);
+			program.initProgram(worker::sendObject);
+			while(true) 
+			{
+				program.handleResult((OutputT) worker.receiveObject());
+			}
+		} catch (EOFException e)
+		{
+			// Program is complete.
 		}
 	}
 
-	public void close() throws Exception
+	public void close() throws IOException
 	{
-		toBrain.close();
 	}
 }
