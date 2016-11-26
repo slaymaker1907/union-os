@@ -10,19 +10,20 @@ import os.union.Distributer;
 import os.union.NetLocation;
 import os.union.ObjectSocket;
 import os.union.ProgramPacket;
+import os.union.util.Closing;
 
 public class WorkerServer implements AutoCloseable
 {
 	private ServerSocket server;
-	private volatile ObjectSocket<Serializable, Serializable> controlSocket;
 	private ConcurrentHashMap<Long, WorkerClient> jobsManager;
 	private Distributer distributer;
 	private Thread acceptConnThread;
+	private ControlComm controlComm;
 	
 	public WorkerServer(int port) throws IOException
 	{
 		this.server = new ServerSocket(port);
-		this.controlSocket = null;
+		this.controlComm = null;
 		this.jobsManager = new ConcurrentHashMap<>();
 		this.acceptConnThread = new Thread(() ->
 			{
@@ -45,82 +46,30 @@ public class WorkerServer implements AutoCloseable
 	{
 		Socket newConn = server.accept();
 		// Only one thread should be calling this function.
-		if (controlSocket == null)
+		ObjectSocket obSock = new ObjectSocket(newConn);
+		if (this.controlComm == null)
 		{
-			this.controlSocket = new ObjectSocket<>(newConn);
-			NetLocation brainLoc = (NetLocation)this.controlSocket.receiveObject();
+			NetLocation brainLoc = (NetLocation)obSock.receiveObject();
 			this.distributer = new Distributer(brainLoc);
+			// Send an update every 100ms.
+			this.controlComm = new ControlComm(obSock, 100);
 		}
 		else
 		{
-			ObjectSocket<Serializable, Serializable> obSock = new ObjectSocket<>(newConn);
 			@SuppressWarnings("unchecked")
 			ProgramPacket<Serializable, Serializable> program = (ProgramPacket<Serializable, Serializable>) obSock.receiveObject();
 			WorkerClient client = new WorkerClient(obSock, program.getProgram(), this.distributer);
 			jobsManager.put(program.getIndex(), client);
 		}
 	}
-
+	
 	@Override
 	public void close() throws IOException
 	{
-		try
-		{
-			this.acceptConnThread.interrupt();
-			try
-			{
-				this.acceptConnThread.join();
-			}
-			catch(InterruptedException e)
-			{
-				System.err.println(e);
-			}
-		}
-		finally
-		{
-			try
-			{
-				this.server.close();
-			}
-			finally
-			{
-				Exception toThrow = null;
-				for(WorkerClient client : jobsManager.values())
-				{
-					try
-					{
-						try
-						{
-							client.close();
-						}
-						catch (IOException | RuntimeException e)
-						{
-							if (toThrow != null)
-								e.addSuppressed(toThrow);
-							toThrow = e;
-						}
-						
-						if (toThrow != null)
-						{
-							if (toThrow instanceof IOException)
-								throw (IOException)toThrow;
-							else
-								throw (RuntimeException) toThrow;
-						}
-					}
-					finally
-					{
-						try
-						{
-							this.distributer.close();
-						}
-						finally
-						{
-							this.controlSocket.close();
-						}
-					}
-				}
-			}
-		}
+		Closing.closeAll(
+				Closing.closeThread(acceptConnThread), 
+				server, 
+				Closing.collect(jobsManager.values().toArray(new AutoCloseable[0])), 
+				distributer);
 	}
 }

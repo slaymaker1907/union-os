@@ -1,19 +1,21 @@
 package os.union.server;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.ServerSocket;
-import java.util.function.Supplier;
 
 import os.union.ObjectSocket;
 import os.union.NetLocation;
 
+import org.apache.log4j.Logger;
+
 public class BrainServer implements AutoCloseable
 {
 	private ServerSocket clientPortal;
-	private Supplier<NetLocation> programPlacer;
+	private WorkerManager programPlacer;
 	
-	public BrainServer(int port, Supplier<NetLocation> programPlacer) throws IOException
+	public static final Logger LOG = Logger.getLogger(BrainServer.class);
+	
+	public BrainServer(int port, WorkerManager programPlacer) throws IOException
 	{
 		this.clientPortal = new ServerSocket(port);
 		this.programPlacer = programPlacer;
@@ -39,9 +41,10 @@ public class BrainServer implements AutoCloseable
 	
 	public void handleNewClient() throws IOException
 	{
-		try(ObjectSocket<Serializable, NetLocation> clientSock = new ObjectSocket<>(this.clientPortal.accept()))
+		try(ObjectSocket clientSock = new ObjectSocket(this.clientPortal.accept()))
 		{
-			NetLocation worker = this.programPlacer.get();
+			Long programLocation = (Long) clientSock.receiveObject();
+			NetLocation worker = this.programPlacer.get(programLocation);
 			clientSock.sendObject(worker);
 		}
 	}

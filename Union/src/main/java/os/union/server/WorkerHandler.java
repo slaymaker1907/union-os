@@ -9,10 +9,10 @@ import os.union.ResultHandler;
 
 public class WorkerHandler implements ResultHandler<Serializable>
 {
-	private ObjectSocket<Serializable, Serializable> clientSocket;
+	private ObjectSocket clientSocket;
 	private Distributer distributer;
 	
-	public WorkerHandler(ObjectSocket<Serializable, Serializable> client, Distributer distributer)
+	public WorkerHandler(ObjectSocket client, Distributer distributer)
 	{
 		this.clientSocket = client;
 		this.distributer = distributer;

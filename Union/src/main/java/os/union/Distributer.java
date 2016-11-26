@@ -15,15 +15,16 @@ public class Distributer implements AutoCloseable
 		this.brainLoc = brainLoc;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public <OutputT extends Serializable, InputT extends Serializable> void invokeMethod(PauseableProgram<OutputT, InputT> program) throws IOException
 	{
 		ProgramPacket<OutputT, InputT> toSend = new ProgramPacket<>(gen.nextLong(), program.getProgram());
 		NetLocation workerLoc = null;
-		try(ObjectSocket<NetLocation, Serializable> toBrain = new ObjectSocket<>(this.brainLoc))
+		try(ObjectSocket toBrain = new ObjectSocket(this.brainLoc))
 		{
-			workerLoc = toBrain.receiveObject();
+			workerLoc = (NetLocation)toBrain.receiveObject();
 		}
-		try(ObjectSocket<OutputT, Serializable> worker = new ObjectSocket<>(workerLoc))
+		try(ObjectSocket worker = new ObjectSocket(workerLoc))
 		{
 			worker.sendObject(toSend);
 			program.initProgram(worker::sendObject);

@@ -11,9 +11,9 @@ public class WorkerClient implements AutoCloseable
 {
 	private ProgramThread thread;
 	private Thread inputThread;
-	private ObjectSocket<Serializable, Serializable> socket;
+	private ObjectSocket socket;
 	
-	public WorkerClient(ObjectSocket<Serializable, Serializable> socket, Program<Serializable, Serializable> program,
+	public WorkerClient(ObjectSocket socket, Program<Serializable, Serializable> program,
 			Distributer distributer)
 	{
 		this.socket = socket;

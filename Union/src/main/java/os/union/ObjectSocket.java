@@ -6,7 +6,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 
-public class ObjectSocket <OutputT extends Serializable, InputT extends Serializable> implements AutoCloseable
+public class ObjectSocket implements AutoCloseable
 {
 	private ObjectOutputStream outStream;
 	private ObjectInputStream inpStream;
@@ -33,15 +33,14 @@ public class ObjectSocket <OutputT extends Serializable, InputT extends Serializ
 		this(new Socket(location.getAddress(), location.getPort()));
 	}
 	
-	public void sendObject(InputT toSend) throws IOException {
+	public void sendObject(Serializable toSend) throws IOException {
 		outStream.writeObject(toSend);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public OutputT receiveObject() throws IOException {
+	public Serializable receiveObject() throws IOException {
 		try
 		{
-			return (OutputT) inpStream.readObject();
+			return (Serializable) inpStream.readObject();
 		} catch (ClassNotFoundException e)
 		{
 			throw new RuntimeException(e);

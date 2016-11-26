@@ -3,4 +3,21 @@
   <groupId>union-os</groupId>
   <artifactId>brain</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+  	<dependency>
+  		<groupId>org.fusesource</groupId>
+  		<artifactId>sigar</artifactId>
+  		<version>1.6.4</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.apache.commons</groupId>
+  		<artifactId>commons-lang3</artifactId>
+  		<version>3.5</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>com.goldmansachs</groupId>
+  		<artifactId>gs-collections</artifactId>
+  		<version>7.0.3</version>
+  	</dependency>
+  </dependencies>
 </project>
