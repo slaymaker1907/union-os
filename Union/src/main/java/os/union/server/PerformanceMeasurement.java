@@ -2,6 +2,8 @@ package os.union.server;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 public class PerformanceMeasurement implements Serializable
 {
 	private static final long serialVersionUID = 1L;
@@ -21,5 +23,13 @@ public class PerformanceMeasurement implements Serializable
 	public double getMemUsage()
 	{
 		return this.memUsage;
+	}
+	
+	public String toString()
+	{
+		return new ToStringBuilder(this)
+				.append("cpuUsage", cpuUsage)
+				.append("memUsage", memUsage)
+				.build();
 	}
 }

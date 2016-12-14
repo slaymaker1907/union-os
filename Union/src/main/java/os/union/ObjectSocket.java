@@ -50,6 +50,7 @@ public class ObjectSocket implements AutoCloseable
 	public void close() throws IOException
 	{
 		try {
+			outStream.flush();
 			outStream.close();
 		} finally {
 			try {

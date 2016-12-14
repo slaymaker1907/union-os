@@ -2,6 +2,7 @@ package os.union.server;
 
 
 import com.gs.collections.api.map.MutableMap;
+import com.gs.collections.impl.block.factory.Predicates;
 import com.gs.collections.impl.map.mutable.UnifiedMap;
 import com.gs.collections.impl.multimap.list.FastListMultimap;
 import org.apache.log4j.Logger;
@@ -20,7 +21,7 @@ public class WorkerMonitor
 	public synchronized void addMeasurement(NetLocation worker, PerformanceMeasurement meas)
 	{
 		perf.put(worker, meas);
-		MONITOR_LOG.info(String.format("Worker at %s has overal performance %s", worker, meas));
+		//MONITOR_LOG.info(String.format("Worker at %s has overal performance %s", worker, meas));
 	}
 	
 	public synchronized void addProgram(NetLocation worker, long programId)
@@ -37,6 +38,11 @@ public class WorkerMonitor
 	public synchronized PerformanceMeasurement getPerformance(NetLocation worker)
 	{
 		return perf.getOrDefault(worker, DEFAULT_MEASUREMENT);
+	}
+	
+	public synchronized NetLocation getProgLoc(Long program)
+	{
+		return programs.flip().get(program).detect(Predicates.alwaysTrue());
 	}
 		
 	public synchronized NetLocation getLightestLoc(Iterable<NetLocation> workers)

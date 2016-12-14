@@ -41,12 +41,16 @@ public class BrainServer implements AutoCloseable
 	
 	public void handleNewClient() throws IOException
 	{
+		LOG.info("Waiting for new client.");
 		try(ObjectSocket clientSock = new ObjectSocket(this.clientPortal.accept()))
 		{
+			LOG.info("New client connected.");
 			Long programLocation = (Long) clientSock.receiveObject();
 			NetLocation worker = this.programPlacer.get(programLocation);
+			LOG.info("Allocating worker " + worker);
 			clientSock.sendObject(worker);
 		}
+		LOG.info("Client disconnected.");
 	}
 
 	@Override
